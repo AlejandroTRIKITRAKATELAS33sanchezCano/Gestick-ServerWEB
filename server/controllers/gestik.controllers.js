@@ -394,7 +394,7 @@ export const dashboardDUENNO = async (req, res) => {
     let productosVendidosACTUALES = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[results2]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
+      const [[results2]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
       productosVendidosACTUALES = parseInt(results2["productosVendidos"], 10) || 0;
       console.log(productosVendidosACTUALES)
     }));
@@ -404,7 +404,7 @@ export const dashboardDUENNO = async (req, res) => {
     let productosAnteriores = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[results3]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE productos_has_Carrito.Productos_Admin_idAdmin = 1 AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
+      const [[results3]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = 1 AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
       productosAnteriores = parseInt(results3["productosVendidos"], 10) || 0;
       console.log(productosAnteriores)
     }));
@@ -459,7 +459,7 @@ export const dashboardDUENNO = async (req, res) => {
     let gananciasACTUALES = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[result4]] = await db.query(`SELECT SUM(Total) as 'total de ganancias' FROM Carrito JOIN Productos_has_CarritoON Carrito.idCarrito = productos_has_Carrito.Carrito_idCarrito WHERE productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
+      const [[result4]] = await db.query(`SELECT SUM(Total) as 'total de ganancias' FROM Carrito JOIN Productos_has_CarritoON Carrito.idCarrito = productos_has_Carrito.Carrito_idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
       const count = parseInt(result4["total de ganancias"], 10) || 0;
       gananciasACTUALES = count;
     }));
@@ -543,7 +543,7 @@ export const dashboardDUENNO = async (req, res) => {
                         INNER JOIN Productos ON productos_has_Carrito.Productos_idProductos = Productos.idProductos 
                         WHERE Carrito.idEmpleadoC = ${idEmpleados[idEmpleadoC - 1]} 
                         AND productos_has_Carrito.Productos_idProductos = ${idProductos[idProductosC - 1]}  
-                        AND productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} 
+                        AND Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} 
                         AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`;
 
         const [resultado] = await db.query(query);
