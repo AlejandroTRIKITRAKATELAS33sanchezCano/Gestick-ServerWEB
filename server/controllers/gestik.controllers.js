@@ -1,17 +1,43 @@
 import { db } from "../db.js";
-//import { tokens } from "../../client/src/views/theme/theme.js";
 
-///Guardar al Admin en la base de datos.
+const validateString = (data) => {
+  const param = "{}$%#/&|<>`'";
+  var result = true;
+  result = data ? true : false;
+  result = data != "" ? true : false;
+  if (result) {
+    for (var i = 0; i < data.length; i++) {
+      result = param.indexOf(data.charAt(i)) == -1 ? true : false;
+    }
+  }
+  return result;
+};
+
+///Guardar al admin en la base de datos.
 export const signAdmin = async (req, res) => {
   var idAdmin = 0;
   var existingId = true;
+  const { Name, AP, AM, PW, AE } = req.body;
   var data;
 
   try {
+    const validation =
+      validateString(Name) ||
+      validateString(AP) ||
+      validateString(AM) ||
+      validateString(PW) ||
+      validateString(AE)
+        ? false
+        : true;
+
+    if (validation) {
+      throw new Error("Datos no válidos");
+    }
+
     while (existingId || idAdmin < 100000) {
       existingId = false;
       idAdmin = Math.floor(Math.random() * 1000000);
-      [data] = await db.query(`select idAdmin from Admin;`);
+      [data] = await db.query(`select idAdmin from admin;`);
       data.forEach((row) => {
         if (idAdmin === row.idAdministrador) {
           existingId = true;
@@ -19,13 +45,12 @@ export const signAdmin = async (req, res) => {
       });
     }
 
-    const { Name, AP, AM, PW, AE } = req.body;
     const result = await db.query(
-      "INSERT INTO Admin(idAdmin,AdNombre,AdAppat,AdApmat,AdContrasenna,Gestick_idGestick, Aactivo, AdEmail) VALUES (?,?,?,?,?,?, 1, ?)",
+      "INSERT INTO admin(idAdmin,AdNombre,AdAppat,AdApmat,AdContrasenna,Gestick_idGestick, Aactivo, AdEmail) VALUES (?,?,?,?,?,?, 1, ?)",
       [idAdmin, Name, AP, AM, PW, 1, AE]
     );
     console.log(result);
-    res.send("creando Admin");
+    res.json({ message: "Tarea fallada exitosamente", idAdmin });
   } catch (error) {
     console.log(error);
     res.json({ error });
