@@ -324,7 +324,7 @@ export const procesSale = async (req, res) => {
       `INSERT INTO Carrito (idCarrito, CarFecha, Total,idEmpleadoC) VALUES (${id}, "${year}-${month}-${day}", ${data.total}, ${data.id});`
     );
 
-    data.Carrito.forEach(async (product) => {
+    data.carrito.forEach(async (product) => {
       const [[{ Marca_idMarca, Categoria_idCategoria }]] = await db.query(
         `SELECT Marca_idMarca, Categoria_idCategoria FROM Productos WHERE idProductos = ${product.idProductos}`
       );
