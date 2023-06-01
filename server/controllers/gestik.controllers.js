@@ -37,7 +37,7 @@ export const signAdmin = async (req, res) => {
     while (existingId || idAdmin < 100000) {
       existingId = false;
       idAdmin = Math.floor(Math.random() * 1000000);
-      [data] = await db.query(`select idAdmin from admin;`);
+      [data] = await db.query(`select idAdmin from Admin;`);
       data.forEach((row) => {
         if (idAdmin === row.idAdministrador) {
           existingId = true;
