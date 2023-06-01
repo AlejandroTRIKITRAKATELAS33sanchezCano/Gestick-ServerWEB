@@ -46,7 +46,7 @@ export const signAdmin = async (req, res) => {
     }
 
     const result = await db.query(
-      "INSERT INTO admin(idAdmin,AdNombre,AdAppat,AdApmat,AdContrasenna,Gestick_idGestick, Aactivo, AdEmail) VALUES (?,?,?,?,?,?, 1, ?)",
+      "INSERT INTO Admin(idAdmin,AdNombre,AdAppat,AdApmat,AdContrasenna,Gestick_idGestick, Aactivo, AdEmail) VALUES (?,?,?,?,?,?, 1, ?)",
       [idAdmin, Name, AP, AM, PW, 1, AE]
     );
     console.log(result);
