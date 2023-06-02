@@ -429,7 +429,7 @@ export const dashboardDUENNO = async (req, res) => {
     let productosAnteriores = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[results3]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = 1 AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
+      const [[results3]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = 1 AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
       productosAnteriores = parseInt(results3["productosVendidos"], 10) || 0;
       console.log(productosAnteriores)
     }));
