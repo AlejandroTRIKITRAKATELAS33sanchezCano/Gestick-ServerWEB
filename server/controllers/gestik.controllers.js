@@ -584,17 +584,17 @@ export const dashboardDUENNO = async (req, res) => {
             resultado[0].x = nombreProductos[idProductosC - 1];
             resultado[0].y = '0';
           }
+
+          const integerY = parseInt(resultado[0].y)
+
+          resultado[0].y = integerY
+
+          const objetoProducto = resultado.pop();
+
+          console.log(objetoProducto)
+
+          resultados.push(objetoProducto);
         }
-
-        const integerY = parseInt(resultado[0].y)
-
-        resultado[0].y = integerY
-
-        const objetoProducto = resultado.pop();
-
-        console.log(objetoProducto)
-
-        resultados.push(objetoProducto);
       }
     }
 
