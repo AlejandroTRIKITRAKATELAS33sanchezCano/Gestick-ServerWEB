@@ -375,11 +375,13 @@ export const procesSale = async (req, res) => {
 };
 
 export const deleteProduct = async (req, res) => {
+  const {idProductos} = req.body;
+  console.log(idProductos);
   try {
-    await db.query(`DELETE from Productos_has_Carritowhere Productos_idProductos = ${req.body.idProductos}`);
-    await db.query(`DELETE from Productos where idProductos = ${req.body.idProductos}`);
+    await db.query(`DELETE from Productos_has_Carritowhere Productos_idProductos = ${idProductos}`);
+    await db.query(`DELETE from Productos where idProductos = ${idProductos}`);
 
-    res.redirect("/stock");
+    res.json({message:"Tarea fallada exitosamente."});
   } catch (error) {
     console.log(error);
     res.json({
