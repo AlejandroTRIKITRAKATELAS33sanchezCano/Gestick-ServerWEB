@@ -484,7 +484,7 @@ export const dashboardDUENNO = async (req, res) => {
     let gananciasACTUALES = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[result4]] = await db.query(`SELECT SUM(Total) as 'total de ganancias' FROM Carrito JOIN Productos_has_CarritoON Carrito.idCarrito = productos_has_Carrito.Carrito_idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
+      const [[result4]] = await db.query(`SELECT SUM(Total) as 'total de ganancias' FROM Carrito JOIN Productos_has_Carrito ON Carrito.idCarrito = productos_has_Carrito.Carrito_idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
       const count = parseInt(result4["total de ganancias"], 10) || 0;
       gananciasACTUALES = count;
     }));
