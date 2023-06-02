@@ -484,7 +484,7 @@ export const dashboardDUENNO = async (req, res) => {
     let gananciasACTUALES = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[result4]] = await db.query(`SELECT SUM(Total) as 'total de ganancias' FROM Carrito JOIN Productos_has_Carrito ON Carrito.idCarrito = productos_has_Carrito.Carrito_idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
+      const [[result4]] = await db.query(`SELECT SUM(Total) as 'total de ganancias' FROM Carrito JOIN Productos_has_Carrito ON Carrito.idCarrito = Productos_has_Carrito.Carrito_idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
       const count = parseInt(result4["total de ganancias"], 10) || 0;
       gananciasACTUALES = count;
     }));
@@ -564,10 +564,10 @@ export const dashboardDUENNO = async (req, res) => {
     for (let idEmpleadoC = 1; idEmpleadoC <= numeroDeEmpleados; idEmpleadoC++) {
       for (let idProductosC = 1; idProductosC <= numeroDeProductos; idProductosC++) {
         const query = `SELECT PrNombre as 'x', SUM(ProVendidos) as 'y' FROM Productos_has_Carrito
-                        INNER JOIN Carrito ON productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito 
-                        INNER JOIN Productos ON productos_has_Carrito.Productos_idProductos = Productos.idProductos 
+                        INNER JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito 
+                        INNER JOIN Productos ON Productos_has_Carrito.Productos_idProductos = Productos.idProductos 
                         WHERE Carrito.idEmpleadoC = ${idEmpleados[idEmpleadoC - 1]} 
-                        AND productos_has_Carrito.Productos_idProductos = ${idProductos[idProductosC - 1]}  
+                        AND Productos_has_Carrito.Productos_idProductos = ${idProductos[idProductosC - 1]}  
                         AND Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} 
                         AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`;
 
