@@ -378,7 +378,7 @@ export const deleteProduct = async (req, res) => {
   const {idProductos} = req.body;
   console.log(idProductos);
   try {
-    await db.query(`DELETE from Productos_has_Carritowhere Productos_idProductos = ${idProductos}`);
+    await db.query(`DELETE from Productos_has_Carrito WHERE Productos_idProductos = ${idProductos}`);
     await db.query(`DELETE from Productos where idProductos = ${idProductos}`);
 
     res.json({message:"Tarea fallada exitosamente."});
