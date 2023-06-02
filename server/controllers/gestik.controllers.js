@@ -570,7 +570,7 @@ export const dashboardDUENNO = async (req, res) => {
                         WHERE Carrito.idEmpleadoC = ${idEmpleados[idEmpleadoC - 1]} 
                         AND Productos_has_Carrito.Productos_idProductos = ${idProductos[idProductosC - 1]}  
                         AND Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} 
-                        AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' GROUP BY Productos_has_Carrito.PrNombre`);
+                        AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' GROUP BY x`);
         
         console.log(resultado);
 
