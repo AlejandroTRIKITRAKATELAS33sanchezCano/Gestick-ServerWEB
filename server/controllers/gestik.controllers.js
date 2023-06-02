@@ -571,6 +571,8 @@ export const dashboardDUENNO = async (req, res) => {
                         AND Productos_has_Carrito.Productos_idProductos = ${idProductos[idProductosC - 1]}  
                         AND Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} 
                         AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' GROUP BY PrNombre`);
+        
+        console.log(resultado);
 
 
         if (resultado[0].y === null) {
