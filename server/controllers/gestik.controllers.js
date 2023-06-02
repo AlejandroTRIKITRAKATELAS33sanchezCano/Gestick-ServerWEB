@@ -563,15 +563,14 @@ export const dashboardDUENNO = async (req, res) => {
 
     for (let idEmpleadoC = 1; idEmpleadoC <= numeroDeEmpleados; idEmpleadoC++) {
       for (let idProductosC = 1; idProductosC <= numeroDeProductos; idProductosC++) {
-        const query = `SELECT PrNombre as 'x', SUM(ProVendidos) as 'y' FROM Productos_has_Carrito
+        
+        const [resultado] = await db.query(`SELECT PrNombre as 'x', SUM(ProVendidos) as 'y' FROM Productos_has_Carrito
                         INNER JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito 
                         INNER JOIN Productos ON Productos_has_Carrito.Productos_idProductos = Productos.idProductos 
                         WHERE Carrito.idEmpleadoC = ${idEmpleados[idEmpleadoC - 1]} 
                         AND Productos_has_Carrito.Productos_idProductos = ${idProductos[idProductosC - 1]}  
                         AND Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} 
-                        AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`;
-
-        const [resultado] = await db.query(query);
+                        AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
 
 
         if (resultado[0].y === null) {
