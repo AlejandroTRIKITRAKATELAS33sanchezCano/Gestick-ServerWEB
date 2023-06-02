@@ -579,7 +579,7 @@ export const dashboardDUENNO = async (req, res) => {
         console.log(resultado);
 
 
-        if (resultado[0].y) {
+        if (resultado.length > 0) {
           if (resultado[0].y == null) {
             resultado[0].x = nombreProductos[idProductosC - 1];
             resultado[0].y = '0';
