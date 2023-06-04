@@ -286,7 +286,7 @@ export const addProduct = async (req, res) => {
     }
 
     const response = await db.query(
-      `INSERT INTO Productos (idProductos, PrNombre, PrPrecio, PrExistencias, PrDescripcion,Admin_idAdmin,Marca_idMarca,Categoria_idCategoria,Pcodigo,PrURLimg) VALUES (${id}, "${data.name}", ${data.price},${data.exis}, "${data.desc}", ${data.idAdmin},1,1,0,"${data.img}");`
+      `INSERT INTO Productos (idProductos, PrNombre, PrPrecio, PrExistencias, PrDescripcion,Admin_idAdmin,Marca_idMarca,Categoria_idCategoria,Pcodigo,PrURLimg) VALUES (${id}, "${data.name}", ${data.price},${data.exis}, "${data.desc}", ${data.idAdmin},1,1,${data.code},"${data.img}");`
     );
     console.log(response);
 
@@ -303,7 +303,7 @@ export const modifyProduct = async (req, res) => {
   const data = req.body;
   try {
     await db.query(
-      `update Productos SET PrNombre = "${data.name}", PrDescripcion = "${data.desc}", PrPrecio =${data.price}, PrExistencias =${data.exis}, Marca_idMarca =${data.tradeMark}, PrURLimg = "${data.img}" where idProductos = ${data.idP}`
+      `update Productos SET PrNombre = "${data.name}", PrDescripcion = "${data.desc}", PrPrecio =${data.price}, PrExistencias = ${data.exis}, Marca_idMarca = ${data.tradeMark}, Pcodigo = ${data.code}, PrURLimg = "${data.img}" WHERE idProductos = ${data.idP}`
     );
     res.json({message:"Tarea completada exitosamente."});
   } catch (error) {
@@ -875,7 +875,6 @@ export const historialVENTA = async(req,res) =>{
 export const getTradeMark = async (req,res) => {
   try{
     const [data] = await db.query("SELECT * FROM Marca ORDER BY MarNombre ASC");
-    console.log(data);
     res.json(data)
   }catch(e){
     console.log(e);
