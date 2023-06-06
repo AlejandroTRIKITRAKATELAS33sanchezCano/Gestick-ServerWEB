@@ -284,7 +284,7 @@ export const addProduct = async (req, res) => {
     }
 
     const response = await db.query(
-      `INSERT INTO Productos (idProductos, PrNombre, PrPrecio, PrExistencias, PrDescripcion,Admin_idAdmin,Marca_idMarca,Categoria_idCategoria,Pcodigo,PrURLimg) VALUES (${id}, "${data.name}", ${data.price},${data.exis}, "${data.desc}", ${data.idAdmin},1,1,${data.code},"${data.img}");`
+      `INSERT INTO Productos (idProductos, PrNombre, PrPrecio, PrExistencias, PrDescripcion,Admin_idAdmin,Marca_idMarca,Categoria_idCategoria,Pcodigo,PrURLimg) VALUES (${id}, "${data.name}", ${data.price},${data.exis}, "${data.desc}", ${data.idAdmin},1,1,"${data.code}","${data.img}");`
     );
     console.log(response);
 
