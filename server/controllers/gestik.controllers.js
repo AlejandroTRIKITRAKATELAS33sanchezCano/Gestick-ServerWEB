@@ -450,13 +450,12 @@ export const dashboardDUENNO = async (req, res) => {
 
     let ventasMes = 0;
 
-    await Promise.all(results1.map(async (element) => {
-      console.log(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
+    await results1.forEach(async (element) => {
       const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
-      console.log(result);
-      const count = parseInt(result["COUNT(idEmpleadoC)"], 10) || 0;
-      ventasMes += count;
-    }));
+      ventasMes += result["COUNT(idEmpleadoC)"];
+    });
+
+    console.log(ventasMes);
 
     let porcentajeNUMERO = (totalactual * 100) / ventasMes
 
