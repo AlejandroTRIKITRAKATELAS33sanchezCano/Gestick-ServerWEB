@@ -441,7 +441,7 @@ export const dashboardDUENNO = async (req, res) => {
     let totalactual = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysInCurrentMonth}' AND Carrito.idEmpleadoC = ${element.Empleado};`);
+      const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Carrito.idEmpleadoC = ${element.Empleado};`);
       const count = parseInt(result["COUNT(idEmpleadoC)"], 10) || 0;
       totalactual += count;
     }));
