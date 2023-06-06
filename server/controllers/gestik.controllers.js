@@ -402,16 +402,12 @@ export const dashboardDUENNO = async (req, res) => {
     }
 
     const daysInCurrentMonth = getDaysInMonth(anno, mes);
-    console.log(daysInCurrentMonth);
 
     const daysBeforeMonth = getDaysInMonth(anno, mes - 1);
-    console.log(daysBeforeMonth);
 
     //EMPLEADOS
 
     const [results1] = await db.query(`SELECT E.idEmpleado as 'Empleado' FROM Admin A JOIN Empleado E ON A.idAdmin = E.Admin_idAdmin where E.Admin_idAdmin=${req.body.idAdmin}`);
-
-    console.log(results1);
 
     //PRODUCTOS ACTUALES
     let productosVendidosACTUALES = 0;
@@ -419,7 +415,6 @@ export const dashboardDUENNO = async (req, res) => {
     await Promise.all(results1.map(async (element) => {
       const [[results2]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
       productosVendidosACTUALES = parseInt(results2["productosVendidos"], 10) || 0;
-      console.log(productosVendidosACTUALES)
     }));
 
     //PRODCUCTOS ANTERIORES
@@ -429,7 +424,6 @@ export const dashboardDUENNO = async (req, res) => {
     await Promise.all(results1.map(async (element) => {
       const [[results3]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = 1 AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
       productosAnteriores = parseInt(results3["productosVendidos"], 10) || 0;
-      console.log(productosAnteriores)
     }));
 
 
@@ -442,17 +436,13 @@ export const dashboardDUENNO = async (req, res) => {
 
     let porcentajeVENTAACTUAL = porcentajeVENTAsin.toFixed(2);
 
-    console.log(productosVendidosACTUALES)
-    console.log(productosAnteriores)
-    console.log(porcentajeVENTA)
-    console.log(porcentajeVENTAACTUAL);
-
     //CLIENTES/CARRITO VENDIDOS ACTUALES
 
     let totalactual = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
+      console.log(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Carrito.idEmpleadoC = ${element.Empleado};`);
+      const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Carrito.idEmpleadoC = ${element.Empleado};`);
       const count = parseInt(result["COUNT(idEmpleadoC)"], 10) || 0;
       totalactual += count;
     }));
@@ -462,18 +452,17 @@ export const dashboardDUENNO = async (req, res) => {
     let ventasMes = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
+      const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 2}-01' AND '${anno}-${mes - 2}-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
+      console.log(result);
       const count = parseInt(result["COUNT(idEmpleadoC)"], 10) || 0;
       ventasMes += count;
     }));
 
-    console.log(totalactual);
-    console.log(ventasMes)
-
     let porcentajeNUMERO = (totalactual * 100) / ventasMes
-    console.log(porcentajeNUMERO);
 
     let porcentajeSIN = porcentajeNUMERO - 100;
+
+    console.log(porcentajeSIN)
 
     let porcentajeACTUAL = porcentajeSIN.toFixed(2);
 
@@ -487,14 +476,10 @@ export const dashboardDUENNO = async (req, res) => {
       gananciasACTUALES = count;
     }));
 
-    console.log(gananciasACTUALES)
-
 
     //PRODUCTOS VENDIDOS GRAFICAS
 
     const [empleadosResults] = await db.query(`SELECT EmNombre FROM Empleado Where Admin_idAdmin=${req.body.idAdmin}`);
-
-    console.log(empleadosResults)
 
 
     //Nombres De los Empleados
@@ -502,27 +487,17 @@ export const dashboardDUENNO = async (req, res) => {
       return objeto.EmNombre;
     });
 
-    console.log(empleadosEmNombres)
-
     //Numero De Empleados
 
     const [[numeroDeEmpleadosCONSULTA]] = await db.query(`SELECT COUNT(*) FROM Empleado WHERE Empleado.Admin_idAdmin = ${req.body.idAdmin}`);
 
-    console.log(numeroDeEmpleadosCONSULTA)
-
     const numeroDeEmpleados = parseInt(numeroDeEmpleadosCONSULTA['COUNT(*)']);
-
-    console.log(numeroDeEmpleados)
 
     //Numero De Productos
 
     const [[numeroDeProductosCONSULTA]] = await db.query(`SELECT COUNT(*) FROM Productos WHERE Productos.Admin_idAdmin = ${req.body.idAdmin}`);
 
-    console.log(numeroDeProductosCONSULTA)
-
     const numeroDeProductos = parseInt(numeroDeProductosCONSULTA['COUNT(*)']);
-
-    console.log(numeroDeProductos)
 
     //Productos Vendidos En Total (Individuales)
 
@@ -532,8 +507,6 @@ export const dashboardDUENNO = async (req, res) => {
 
     const nombreProductos = nombreProductosCONSULTA.map(objeto => objeto.PrNombre);
 
-    console.log(nombreProductos)
-
 
     //Suma De Todos Los Productos
 
@@ -541,21 +514,13 @@ export const dashboardDUENNO = async (req, res) => {
 
     const [idEmpleadosCONSULTA] = await db.query(`SELECT idEmpleado FROM Empleado WHERE Admin_idAdmin = ${req.body.idAdmin}`);
 
-    console.log(idEmpleadosCONSULTA)
-
     const idEmpleados = idEmpleadosCONSULTA.map(objeto => objeto.idEmpleado);
-
-    console.log(idEmpleados);
 
     //ID DE PRODUCTOS
 
     const [idProductosCONSULTA] = await db.query(`SELECT idProductos FROM Productos WHERE Admin_idAdmin = ${req.body.idAdmin}`);
 
-    console.log(idProductosCONSULTA)
-
     const idProductos = idProductosCONSULTA.map(objeto => objeto.idProductos)
-
-    console.log(idProductos)
 
     const resultados = [];
 
@@ -570,12 +535,7 @@ export const dashboardDUENNO = async (req, res) => {
                         AND Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} 
                         AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' GROUP BY Productos.PrNombre`;
         
-        console.log(query);
-        
         const [resultado] = await db.query(query);
-        
-        console.log(resultado);
-
 
         if (resultado.length > 0) {
           if (resultado[0].y == null) {
@@ -589,16 +549,10 @@ export const dashboardDUENNO = async (req, res) => {
 
           const objetoProducto = resultado.pop();
 
-          console.log(objetoProducto)
-
           resultados.push(objetoProducto);
         }
       }
     }
-
-    console.log(resultados);
-
-    console.log("aquí está: " + resultados)
 
     //numeroDeEmpleados
 
