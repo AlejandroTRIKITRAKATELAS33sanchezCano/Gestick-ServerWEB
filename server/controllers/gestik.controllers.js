@@ -451,6 +451,7 @@ export const dashboardDUENNO = async (req, res) => {
     let ventasMes = 0;
 
     await Promise.all(results1.map(async (element) => {
+      console.log(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
       const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
       console.log(result);
       const count = parseInt(result["COUNT(idEmpleadoC)"], 10) || 0;
@@ -628,14 +629,14 @@ export const dashboardDUENNO = async (req, res) => {
     });
 
     // Imprimir el resultado
-    console.log(dataLINE);
+    ///console.log(dataLINE);
 
     //IMPIRMIR HISTORIAL DE CARRITO
 
     const [historialCARRITOconsulta] = await db.query(`SELECT idCarrito as 'txId', EmNombre as 'user', CarFecha as 'date', Total as 'cost' FROM Carrito INNER JOIN Empleado ON Carrito.idEmpleadoC = Empleado.idEmpleado AND Carrito.CarFecha between '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Empleado.Admin_idAdmin = ${req.body.idAdmin}`)
 
-    console.log(historialCARRITOconsulta)
-    console.log(req.body.idAdmin)
+    ///console.log(historialCARRITOconsulta)
+    ///console.log(req.body.idAdmin)
 
     const historialCARRITO = historialCARRITOconsulta.map(objeto => {
       const { txId, user, date, cost } = objeto;
@@ -643,7 +644,7 @@ export const dashboardDUENNO = async (req, res) => {
       return { txId, user, date: dateString, cost };
     });
 
-    console.log(historialCARRITO);
+    ///console.log(historialCARRITO);
 
 
     res.json({
