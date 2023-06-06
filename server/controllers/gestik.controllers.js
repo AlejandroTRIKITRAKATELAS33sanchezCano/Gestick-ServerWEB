@@ -252,13 +252,11 @@ export const deleteEmpleado = async (req, res) => {
 
 export const stockPage = async (req, res) => {
   const data = req.body;
-  console.log(data);
   try {
     const [results] = await db.query(
       `SELECT * from Productos a INNER JOIN Marca b on a.Marca_idMarca = b.idMarca where Admin_idAdmin = ${data.idAdmin} ;`
     );
 
-    console.log(results);
     res.json(results);
   } catch (error) {
     console.log(error);
@@ -303,7 +301,7 @@ export const modifyProduct = async (req, res) => {
   const data = req.body;
   try {
     await db.query(
-      `update Productos SET PrNombre = "${data.name}", PrDescripcion = "${data.desc}", PrPrecio =${data.price}, PrExistencias = ${data.exis}, Marca_idMarca = ${data.tradeMark}, Pcodigo = ${data.code}, PrURLimg = "${data.img}" WHERE idProductos = ${data.idP}`
+      `update Productos SET PrNombre = "${data.name}", PrDescripcion = "${data.desc}", PrPrecio =${data.price}, PrExistencias = ${data.exis}, Marca_idMarca = ${data.tradeMark}, Pcodigo = "${data.code}", PrURLimg = "${data.img}" WHERE idProductos = ${data.idP}`
     );
     res.json({message:"Tarea completada exitosamente."});
   } catch (error) {
@@ -315,10 +313,8 @@ export const modifyProduct = async (req, res) => {
 };
 
 export const getAProduct =  async (req,res) => {
-  console.log(req.body);
   try{
     const [[response]] = await db.query(`SELECT * FROM Productos WHERE idProductos = ${req.body.idProduct}`);
-    console.log(response);
     res.json(response);
   }catch(e){
     console.log(e);
