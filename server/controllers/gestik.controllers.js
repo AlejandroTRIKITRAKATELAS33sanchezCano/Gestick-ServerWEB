@@ -422,7 +422,9 @@ export const dashboardDUENNO = async (req, res) => {
     let productosAnteriores = 0;
 
     await Promise.all(results1.map(async (element) => {
-      const [[results3]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = 1 AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
+      console.log(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = 1 AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
+      const [[results3]] = await db.query(`SELECT SUM(ProVendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
+      console.log(results3);
       productosAnteriores = parseInt(results3["productosVendidos"], 10) || 0;
     }));
 
@@ -450,18 +452,14 @@ export const dashboardDUENNO = async (req, res) => {
 
     let ventasMes = 0;
 
-    await results1.forEach(async (element) => {
+    await Promise.all(results1.map(async (element) => {
       const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
       ventasMes += result["COUNT(idEmpleadoC)"];
-    });
-
-    console.log(ventasMes);
+    }));
 
     let porcentajeNUMERO = (totalactual * 100) / ventasMes
 
     let porcentajeSIN = porcentajeNUMERO - 100;
-
-    console.log(porcentajeSIN)
 
     let porcentajeACTUAL = porcentajeSIN.toFixed(2);
 
