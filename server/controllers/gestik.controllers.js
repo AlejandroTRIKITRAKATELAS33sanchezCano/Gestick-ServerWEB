@@ -64,7 +64,9 @@ export const logAdmin = async (req, res) => {
   console.log(password);
 
   try {
-    const [results] = await db.query(`SELECT * FROM Admin WHERE idAdmin = ${idAdmin} And AdContrasenna = "${password}";`);
+    const [results] = await db.query(
+      `SELECT * FROM Admin WHERE idAdmin = ${idAdmin} And AdContrasenna = "${password}";`
+    );
 
     console.log(results);
 
@@ -84,7 +86,7 @@ export const logAdmin = async (req, res) => {
 
 //tablero Sesión
 
-export const tableroAdmin = async (req, res) => { };
+export const tableroAdmin = async (req, res) => {};
 
 //ObtenerAdministradores
 
@@ -227,12 +229,14 @@ export const getAnEmp = async (req, res) => {
 export const modifyEmp = async (req, res) => {
   const data = req.body;
   console.log(data);
-  try{
-    await db.query(`UPDATE Empleado SET EmNombre = "${data.firstName}", EmApat = "${data.lastNameP}", EmAmat = "${data.lastNameM}", EmDireccion1 = "${data.address1}", EmDireccion2 = "${data.address2}", EmURLimg = "${data.img}" WHERE idEmpleado = ${data.id}`);
-    res.json({message:"Tarea fallada exitosamente"})
-  }catch(e){
+  try {
+    await db.query(
+      `UPDATE Empleado SET EmNombre = "${data.firstName}", EmApat = "${data.lastNameP}", EmAmat = "${data.lastNameM}", EmDireccion1 = "${data.address1}", EmDireccion2 = "${data.address2}", EmURLimg = "${data.img}" WHERE idEmpleado = ${data.id}`
+    );
+    res.json({ message: "Tarea fallada exitosamente" });
+  } catch (e) {
     console.log(e);
-    res.json({error:"a"})
+    res.json({ error: "a" });
   }
 };
 
@@ -303,7 +307,7 @@ export const modifyProduct = async (req, res) => {
     await db.query(
       `update Productos SET PrNombre = "${data.name}", PrDescripcion = "${data.desc}", PrPrecio =${data.price}, PrExistencias = ${data.exis}, Marca_idMarca = ${data.tradeMark}, Pcodigo = "${data.code}", PrURLimg = "${data.img}" WHERE idProductos = ${data.idP}`
     );
-    res.json({message:"Tarea completada exitosamente."});
+    res.json({ message: "Tarea completada exitosamente." });
   } catch (error) {
     console.log(error);
     res.json({
@@ -312,15 +316,19 @@ export const modifyProduct = async (req, res) => {
   }
 };
 
-export const getAProduct =  async (req,res) => {
-  try{
-    const [[response]] = await db.query(`SELECT * FROM Productos WHERE idProductos = ${req.body.idProduct}`);
+export const getAProduct = async (req, res) => {
+  try {
+    const [[response]] = await db.query(
+      `SELECT * FROM Productos WHERE idProductos = ${req.body.idProduct}`
+    );
     res.json(response);
-  }catch(e){
+  } catch (e) {
     console.log(e);
-    res.json({error:"Hubo un error en el servidor, vuelva a intentarlo más tarde."})
+    res.json({
+      error: "Hubo un error en el servidor, vuelva a intentarlo más tarde.",
+    });
   }
-}
+};
 
 export const procesSale = async (req, res) => {
   const data = req.body;
@@ -350,7 +358,7 @@ export const procesSale = async (req, res) => {
         `SELECT Marca_idMarca, Categoria_idCategoria FROM Productos WHERE idProductos = ${product.idProductos}`
       );
       await db.query(
-        `INSERT INTO Productos_has_Carrito(Productos_idProductos, Productos_Admin_idAdmin, Productos_Marca_idMarca, Productos_Categoria_idCategoria, Carrito_idCarrito, ProVendidos) VALUES (${product.idProductos}, ${data.idAdmin}, ${Marca_idMarca},${Categoria_idCategoria}, ${id}, ${product.quant})`
+        `INSERT INTO Productos_has_Carrito(Productos_idProductos, Carrito_idCarrito, ProVendidos) VALUES (${product.idProductos}, ${id}, ${product.quant})`
       );
 
       await db.query(
@@ -366,18 +374,20 @@ export const procesSale = async (req, res) => {
     console.log(e);
     res.json({
       error: "Hubo un error en el servidor. Vuelva a intentarlo más tarde.",
-    }); 
+    });
   }
 };
 
 export const deleteProduct = async (req, res) => {
-  const {idProductos} = req.body;
+  const { idProductos } = req.body;
   console.log(idProductos);
   try {
-    await db.query(`DELETE from Productos_has_Carrito WHERE Productos_idProductos = ${idProductos}`);
+    await db.query(
+      `DELETE from Productos_has_Carrito WHERE Productos_idProductos = ${idProductos}`
+    );
     await db.query(`DELETE from Productos where idProductos = ${idProductos}`);
 
-    res.json({message:"Tarea fallada exitosamente."});
+    res.json({ message: "Tarea fallada exitosamente." });
   } catch (error) {
     console.log(error);
     res.json({
@@ -388,11 +398,9 @@ export const deleteProduct = async (req, res) => {
 
 export const dashboardDUENNO = async (req, res) => {
   try {
-
     //FECHA
 
     let today = new Date();
-
     let anno = today.getFullYear();
     let mes = today.getMonth() + 1;
     let dia = today.getDate();
@@ -402,37 +410,67 @@ export const dashboardDUENNO = async (req, res) => {
     }
 
     const daysInCurrentMonth = getDaysInMonth(anno, mes);
-
     const daysBeforeMonth = getDaysInMonth(anno, mes - 1);
 
-    //EMPLEADOS
+    ///Obtener todos los productos del admin, con ventas totales y ordenados de forma descendente.
+    const [productList] = await db.query(
+      `SELECT idProductos, PrNombre
+      FROM Productos_has_Carrito 
+      INNER JOIN Productos ON Productos_has_Carrito.Productos_idProductos = Productos.idProductos
+      WHERE Admin_idAdmin = ? 
+      GROUP BY idProductos, PrNombre
+      ORDER BY SUM(ProVendidos) DESC;`,
+      [req.body.idAdmin]
+    );
 
-    const [results1] = await db.query(`SELECT E.idEmpleado as 'Empleado' FROM Admin A JOIN Empleado E ON A.idAdmin = E.Admin_idAdmin where E.Admin_idAdmin=${req.body.idAdmin}`);
+    //EMPLEADOS
+    const [listEmp] = await db.query(
+      `SELECT idEmpleado as 'Empleado', EmNombre FROM Empleado WHERE Admin_idAdmin = ?;`,
+      [req.body.idAdmin]
+    );
 
     //PRODUCTOS ACTUALES
     let productosVendidosACTUALES = 0;
 
-    await Promise.all(results1.map(async (element) => {
-      const [[results2]] = await db.query(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
-      productosVendidosACTUALES = parseInt(results2["productosVendidos"], 10) || 0;
-    }));
+    await Promise.all(
+      listEmp.map(async (element) => {
+        const [[results2]] = await db.query(
+          `SELECT SUM(provendidos) as 'productosVendidos'
+          FROM Productos_has_Carrito
+          JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito
+          JOIN Productos ON Productos_has_Carrito.Carrito_idCarrito = Productos.idProductos
+          WHERE Productos.Admin_idAdmin = ${req.body.idAdmin}
+          AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}';`
+        );
+        productosVendidosACTUALES =
+          parseInt(results2["productosVendidos"], 10) || 0;
+      })
+    );
 
     //PRODCUCTOS ANTERIORES
-
     let productosAnteriores = 0;
 
-    await Promise.all(results1.map(async (element) => {
-      console.log(`SELECT SUM(provendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = 1 AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
-      const [[results3]] = await db.query(`SELECT SUM(ProVendidos) as 'productosVendidos' FROM Productos_has_Carrito JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}'`);
-      console.log(results3);
-      productosAnteriores = parseInt(results3["productosVendidos"], 10) || 0;
-    }));
-
+    await Promise.all(
+      listEmp.map(async (element) => {
+        const [[results3]] = await db.query(
+          `SELECT SUM(ProVendidos) as 'productosVendidos'
+          FROM Productos_has_Carrito
+          JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito
+          JOIN Productos ON Productos_has_Carrito.Productos_idProductos = Productos.idProductos
+          WHERE Productos.Admin_idAdmin = ${
+            req.body.idAdmin
+          } AND Carrito.CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${
+            mes - 1
+          }-${daysBeforeMonth}'`
+        );
+        productosAnteriores = parseInt(results3["productosVendidos"], 10) || 0;
+      })
+    );
 
     //VENTAS OBTENIDAS GENERAL
 
-    let porcentajeVENTA = (productosVendidosACTUALES * 100) / productosAnteriores
-
+    let porcentajeVENTA =
+      (productosVendidosACTUALES * 100) / productosAnteriores;
 
     let porcentajeVENTAsin = porcentajeVENTA - 100;
 
@@ -442,22 +480,34 @@ export const dashboardDUENNO = async (req, res) => {
 
     let totalactual = 0;
 
-    await Promise.all(results1.map(async (element) => {
-      const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Carrito.idEmpleadoC = ${element.Empleado};`);
-      const count = parseInt(result["COUNT(idEmpleadoC)"], 10) || 0;
-      totalactual += count;
-    }));
+    await Promise.all(
+      listEmp.map(async (element) => {
+        const [[result]] = await db.query(
+          `SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Carrito.idEmpleadoC = ${element.Empleado};`
+        );
+        const count = parseInt(result["COUNT(idEmpleadoC)"], 10) || 0;
+        totalactual += count;
+      })
+    );
 
     //Sacar Porcentaje de ventas
 
     let ventasMes = 0;
 
-    await Promise.all(results1.map(async (element) => {
-      const [[result]] = await db.query(`SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${mes - 1}-01' AND '${anno}-${mes - 1}-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`);
-      ventasMes += result["COUNT(idEmpleadoC)"];
-    }));
+    await Promise.all(
+      listEmp.map(async (element) => {
+        const [[result]] = await db.query(
+          `SELECT COUNT(idEmpleadoC) FROM Carrito WHERE CarFecha BETWEEN '${anno}-${
+            mes - 1
+          }-01' AND '${anno}-${
+            mes - 1
+          }-${daysBeforeMonth}' AND Carrito.idEmpleadoC = ${element.Empleado}`
+        );
+        ventasMes += result["COUNT(idEmpleadoC)"];
+      })
+    );
 
-    let porcentajeNUMERO = (totalactual * 100) / ventasMes
+    let porcentajeNUMERO = (totalactual * 100) / ventasMes;
 
     let porcentajeSIN = porcentajeNUMERO - 100;
 
@@ -467,17 +517,26 @@ export const dashboardDUENNO = async (req, res) => {
 
     let gananciasACTUALES = 0;
 
-    await Promise.all(results1.map(async (element) => {
-      const [[result4]] = await db.query(`SELECT SUM(Total) as 'total de ganancias' FROM Carrito JOIN Productos_has_Carrito ON Carrito.idCarrito = Productos_has_Carrito.Carrito_idCarrito WHERE Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`);
-      const count = parseInt(result4["total de ganancias"], 10) || 0;
-      gananciasACTUALES = count;
-    }));
-
+    await Promise.all(
+      listEmp.map(async (element) => {
+        const [[result4]] = await db.query(
+          `SELECT SUM(Total) as 'total de ganancias'
+          FROM Carrito
+          JOIN Productos_has_Carrito ON Carrito.idCarrito = Productos_has_Carrito.Carrito_idCarrito
+          JOIN Productos ON Productos.idProductos = Productos_has_Carrito.Productos_idProductos
+          WHERE Productos.Admin_idAdmin = ${req.body.idAdmin}
+          AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}'`
+        );
+        const count = parseInt(result4["total de ganancias"], 10) || 0;
+        gananciasACTUALES = count;
+      })
+    );
 
     //PRODUCTOS VENDIDOS GRAFICAS
 
-    const [empleadosResults] = await db.query(`SELECT EmNombre FROM Empleado Where Admin_idAdmin=${req.body.idAdmin}`);
-
+    const [empleadosResults] = await db.query(
+      `SELECT EmNombre FROM Empleado Where Admin_idAdmin=${req.body.idAdmin}`
+    );
 
     //Nombres De los Empleados
     const empleadosEmNombres = empleadosResults.map((objeto) => {
@@ -485,64 +544,80 @@ export const dashboardDUENNO = async (req, res) => {
     });
 
     //Numero De Empleados
+    const [[numeroDeEmpleadosCONSULTA]] = await db.query(
+      `SELECT COUNT(*) FROM Empleado WHERE Empleado.Admin_idAdmin = ${req.body.idAdmin}`
+    );
 
-    const [[numeroDeEmpleadosCONSULTA]] = await db.query(`SELECT COUNT(*) FROM Empleado WHERE Empleado.Admin_idAdmin = ${req.body.idAdmin}`);
-
-    const numeroDeEmpleados = parseInt(numeroDeEmpleadosCONSULTA['COUNT(*)']);
+    const numeroDeEmpleados = parseInt(numeroDeEmpleadosCONSULTA["COUNT(*)"]);
 
     //Numero De Productos
+    const [[numeroDeProductosCONSULTA]] = await db.query(
+      `SELECT COUNT(*) FROM Productos WHERE Productos.Admin_idAdmin = ${req.body.idAdmin}`
+    );
 
-    const [[numeroDeProductosCONSULTA]] = await db.query(`SELECT COUNT(*) FROM Productos WHERE Productos.Admin_idAdmin = ${req.body.idAdmin}`);
-
-    const numeroDeProductos = parseInt(numeroDeProductosCONSULTA['COUNT(*)']);
+    const numeroDeProductos = parseInt(numeroDeProductosCONSULTA["COUNT(*)"]);
 
     //Productos Vendidos En Total (Individuales)
 
     //En esta funcion se obtienen todos los nombres de los Productos que el Administrador Tenga Registrado En Su Base De Datos
 
-    const [nombreProductosCONSULTA] = await db.query(`SELECT PrNombre FROM Productos WHERE Admin_idAdmin = ${req.body.idAdmin};`)
+    const [nombreProductosCONSULTA] = await db.query(
+      `SELECT PrNombre FROM Productos WHERE Admin_idAdmin = ${req.body.idAdmin};`
+    );
 
-    const nombreProductos = nombreProductosCONSULTA.map(objeto => objeto.PrNombre);
-
+    const nombreProductos = nombreProductosCONSULTA.map(
+      (objeto) => objeto.PrNombre
+    );
 
     //Suma De Todos Los Productos
 
     //ID DE EMPLEADOS
 
-    const [idEmpleadosCONSULTA] = await db.query(`SELECT idEmpleado FROM Empleado WHERE Admin_idAdmin = ${req.body.idAdmin}`);
+    const [idEmpleadosCONSULTA] = await db.query(
+      `SELECT idEmpleado FROM Empleado WHERE Admin_idAdmin = ${req.body.idAdmin}`
+    );
 
-    const idEmpleados = idEmpleadosCONSULTA.map(objeto => objeto.idEmpleado);
+    const idEmpleados = idEmpleadosCONSULTA.map((objeto) => objeto.idEmpleado);
 
     //ID DE PRODUCTOS
 
-    const [idProductosCONSULTA] = await db.query(`SELECT idProductos FROM Productos WHERE Admin_idAdmin = ${req.body.idAdmin}`);
+    const [idProductosCONSULTA] = await db.query(
+      `SELECT idProductos FROM Productos WHERE Admin_idAdmin = ${req.body.idAdmin}`
+    );
 
-    const idProductos = idProductosCONSULTA.map(objeto => objeto.idProductos)
+    const idProductos = idProductosCONSULTA.map((objeto) => objeto.idProductos);
 
     const resultados = [];
 
     for (let idEmpleadoC = 1; idEmpleadoC <= numeroDeEmpleados; idEmpleadoC++) {
-      for (let idProductosC = 1; idProductosC <= numeroDeProductos; idProductosC++) {
-        
+      for (
+        let idProductosC = 1;
+        idProductosC <= numeroDeProductos;
+        idProductosC++
+      ) {
         const query = `SELECT Productos.PrNombre as 'x', SUM(ProVendidos) as 'y' FROM Productos_has_Carrito
                         INNER JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito 
                         INNER JOIN Productos ON Productos_has_Carrito.Productos_idProductos = Productos.idProductos 
-                        WHERE Carrito.idEmpleadoC = ${idEmpleados[idEmpleadoC - 1]} 
-                        AND Productos_has_Carrito.Productos_idProductos = ${idProductos[idProductosC - 1]}  
-                        AND Productos_has_Carrito.Productos_Admin_idAdmin = ${req.body.idAdmin} 
+                        WHERE Carrito.idEmpleadoC = ${
+                          idEmpleados[idEmpleadoC - 1]
+                        } 
+                        AND Productos_has_Carrito.Productos_idProductos = ${
+                          idProductos[idProductosC - 1]
+                        }  
+                        AND Productos.Admin_idAdmin = ${req.body.idAdmin} 
                         AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' GROUP BY Productos.PrNombre`;
-        
+
         const [resultado] = await db.query(query);
 
         if (resultado.length > 0) {
           if (resultado[0].y == null) {
             resultado[0].x = nombreProductos[idProductosC - 1];
-            resultado[0].y = '0';
+            resultado[0].y = "0";
           }
 
-          const integerY = parseInt(resultado[0].y)
+          const integerY = parseInt(resultado[0].y);
 
-          resultado[0].y = integerY
+          resultado[0].y = integerY;
 
           const objetoProducto = resultado.pop();
 
@@ -571,18 +646,20 @@ export const dashboardDUENNO = async (req, res) => {
       const arregloOrdenado = arreglo.slice().sort((a, b) => b.y - a.y);
 
       let otrosSumaY = 0;
-      const arregloModificado = arregloOrdenado.map((objeto, indice) => {
-        if (indice >= 9) {
-          otrosSumaY += objeto.y;
-          return null;
-        }
-        return objeto;
-      }).filter(Boolean);
+      const arregloModificado = arregloOrdenado
+        .map((objeto, indice) => {
+          if (indice >= 9) {
+            otrosSumaY += objeto.y;
+            return null;
+          }
+          return objeto;
+        })
+        .filter(Boolean);
 
       if (otrosSumaY > 0) {
-        arregloModificado.push({ x: 'Otros', y: otrosSumaY });
+        arregloModificado.push({ x: "Otros", y: otrosSumaY });
       } else if (otrosSumaY === 0) {
-        arregloModificado.push({ x: 'Otros', y: 0 });
+        arregloModificado.push({ x: "Otros", y: 0 });
       }
 
       ProductosEmpleadoORDENADO.push(arregloModificado);
@@ -606,54 +683,64 @@ export const dashboardDUENNO = async (req, res) => {
     ya propuestas:empleadosEmNombres:{},ProductosEmpleadoORDENADO:[]
     */
 
+    const dataLINE = await Promise.all(
+      listEmp.map(async ({ Empleado, EmNombre }, index) => {
+        var otros = 0;
+        if (index != -1) {
+          return {
+            id: EmNombre,
+            color: getRandomColor(),
+            data: await Promise.all(productList.map(
+              async ({ PrNombre, idProductos }, index, elements) => {
+                const [[data]] = await db.query(
+                  `SELECT SUM(ProVendidos)
+                      FROM Productos_has_Carrito 
+                      INNER JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito
+                      WHERE Carrito.idEmpleadoC = ? AND Productos_has_Carrito.Productos_idProductos = ?;`,
+                  [Empleado, idProductos]
+                );
+                if (index < 5) {
+                  return {
+                    x: PrNombre,
+                    y: data['SUM(ProVendidos)'] ? data['SUM(ProVendidos)'] : 0
+                  };
+                } else {
 
-    const dataLINE = empleadosEmNombres.map((id, index) => {
-
-      if (index != -1) {
-        return {
-          id: id,
-          color: getRandomColor(),
-          data: ProductosEmpleadoORDENADO[index].slice(0, 13).map((element) => {
-            return {
-              x: element.x,
-              y: element.y,
-            };
-          }),
-        };
-      } else {
-        console.log("chispas")
-      }
-    });
-
-    // Imprimir el resultado
-    ///console.log(dataLINE);
+                }
+              }
+            ))
+          };
+        } else {
+          console.log("chispas");
+        }
+      })
+    );
+    
 
     //IMPIRMIR HISTORIAL DE CARRITO
 
-    const [historialCARRITOconsulta] = await db.query(`SELECT idCarrito as 'txId', EmNombre as 'user', CarFecha as 'date', Total as 'cost' FROM Carrito INNER JOIN Empleado ON Carrito.idEmpleadoC = Empleado.idEmpleado AND Carrito.CarFecha between '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Empleado.Admin_idAdmin = ${req.body.idAdmin}`)
+    const [historialCARRITOconsulta] = await db.query(
+      `SELECT idCarrito as 'txId', EmNombre as 'user', CarFecha as 'date', Total as 'cost' FROM Carrito INNER JOIN Empleado ON Carrito.idEmpleadoC = Empleado.idEmpleado AND Carrito.CarFecha between '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' AND Empleado.Admin_idAdmin = ${req.body.idAdmin}`
+    );
 
     ///console.log(historialCARRITOconsulta)
     ///console.log(req.body.idAdmin)
 
-    const historialCARRITO = historialCARRITOconsulta.map(objeto => {
+    const historialCARRITO = historialCARRITOconsulta.map((objeto) => {
       const { txId, user, date, cost } = objeto;
-      const dateString = new Date(date).toISOString().split('T')[0];
+      const dateString = new Date(date).toISOString().split("T")[0];
       return { txId, user, date: dateString, cost };
     });
 
     ///console.log(historialCARRITO);
 
-
     res.json({
-
       //FECHA
-
       anno,
       mes,
       dia,
 
       //VENTAS
-
       productosVendidosACTUALES,
       porcentajeVENTAACTUAL,
 
@@ -664,26 +751,22 @@ export const dashboardDUENNO = async (req, res) => {
       //GANANCIAS TOTALES
       gananciasACTUALES,
 
-
       //Datos De Las Graficas
       dataLINE,
 
       //Historial de Carrito
-
-      historialCARRITO
-    })
-
+      historialCARRITO,
+    });
   } catch (error) {
     console.log(error);
     res.json({
-      error: "Hubo un error en el servidor. Vuelva a intentarlo más tarde"
+      error: "Hubo un error en el servidor. Vuelva a intentarlo más tarde",
     });
   }
-}
+};
 
 export const dashboardADMIN = async (req, res) => {
   try {
-
     //FECHA
 
     let today = new Date();
@@ -702,20 +785,28 @@ export const dashboardADMIN = async (req, res) => {
     const daysBeforeMonth = getDaysInMonth(anno, mes - 1);
     console.log(daysBeforeMonth);
 
-    const [MembresiasCONSULTA] = await db.query(`SELECT COUNT(idAdmin) as 'Membresías' FROM Admin`);
-    const [EmpleadosCONSULTA] = await db.query(`SELECT COUNT(idEmpleado) as 'empleados' FROM Empleado;`);
+    const [MembresiasCONSULTA] = await db.query(
+      `SELECT COUNT(idAdmin) as 'Membresías' FROM Admin`
+    );
+    const [EmpleadosCONSULTA] = await db.query(
+      `SELECT COUNT(idEmpleado) as 'empleados' FROM Empleado;`
+    );
 
-    const Empleados = EmpleadosCONSULTA.map(objeto => objeto.empleados)
-    const Membresias = MembresiasCONSULTA.map(objeto => objeto.Membresías)
+    const Empleados = EmpleadosCONSULTA.map((objeto) => objeto.empleados);
+    const Membresias = MembresiasCONSULTA.map((objeto) => objeto.Membresías);
 
     const EmpleadosTOTAL = Empleados[0];
     const MembresiasTOTAL = Membresias[0];
 
     const UsuariosTOTAL = EmpleadosTOTAL + MembresiasTOTAL;
 
-    const [GananciasUSUARIOSconsulta] = await db.query(`SELECT SUM(Total) as 'SumaCARRITO' FROM Carrito WHERE CarFecha BETWEEN '${anno}-01-01' AND '${anno}-12-31'`)
+    const [GananciasUSUARIOSconsulta] = await db.query(
+      `SELECT SUM(Total) as 'SumaCARRITO' FROM Carrito WHERE CarFecha BETWEEN '${anno}-01-01' AND '${anno}-12-31'`
+    );
 
-    const GananciasUSUARIOS = GananciasUSUARIOSconsulta.map(objeto => objeto.SumaCARRITO)
+    const GananciasUSUARIOS = GananciasUSUARIOSconsulta.map(
+      (objeto) => objeto.SumaCARRITO
+    );
 
     const GananciasUsuariosTOTAL = GananciasUSUARIOS[0];
 
@@ -726,24 +817,40 @@ export const dashboardADMIN = async (req, res) => {
     }
 
     for (let mes = 1; mes <= 12; mes++) {
-      const fechaInicio = `${anno}-${mes.toString().padStart(2, '0')}-01`;
-      const numeroDias = getMonthDays(anno, mes)
-      const fechaFin = `${anno}-${mes.toString().padStart(2, '0')}-${numeroDias.toString().padStart(2, '0')}`;
+      const fechaInicio = `${anno}-${mes.toString().padStart(2, "0")}-01`;
+      const numeroDias = getMonthDays(anno, mes);
+      const fechaFin = `${anno}-${mes.toString().padStart(2, "0")}-${numeroDias
+        .toString()
+        .padStart(2, "0")}`;
 
-      const [gananciasUsuariosConsulta] = await db.query(`SELECT SUM(Total) as 'SumaCARRITO' FROM Carrito WHERE CarFecha BETWEEN '${fechaInicio}' AND '${fechaFin}'`);
+      const [gananciasUsuariosConsulta] = await db.query(
+        `SELECT SUM(Total) as 'SumaCARRITO' FROM Carrito WHERE CarFecha BETWEEN '${fechaInicio}' AND '${fechaFin}'`
+      );
 
       const gananciaMes = gananciasUsuariosConsulta[0].SumaCARRITO || 0;
       gananciasUsuariosMES.push(gananciaMes);
 
       console.log(fechaInicio);
       console.log(fechaFin);
-
     }
 
     console.log(gananciasUsuariosMES);
 
-    let data  = [{x:"Enero",y:'0'},{x:"Febrero",y:'0'},{x:"Marzo",y:'0'},{x:"Abril",y:'0'},{x:"Mayo",y:'0'},{x:"Junio",y:'0'},{x:"Julio",y:'0'},{x:"Agosto",y:'0'},{x:"Septiembre",y:'0'},{x:"Octubre",y:'0'},{x:"Noviembre",y:'0'},{x:"Diciembre",y:'0'}]
-    
+    let data = [
+      { x: "Enero", y: "0" },
+      { x: "Febrero", y: "0" },
+      { x: "Marzo", y: "0" },
+      { x: "Abril", y: "0" },
+      { x: "Mayo", y: "0" },
+      { x: "Junio", y: "0" },
+      { x: "Julio", y: "0" },
+      { x: "Agosto", y: "0" },
+      { x: "Septiembre", y: "0" },
+      { x: "Octubre", y: "0" },
+      { x: "Noviembre", y: "0" },
+      { x: "Diciembre", y: "0" },
+    ];
+
     data = data.map((element, index) => {
       element.y = gananciasUsuariosMES[index].toString();
       return element;
@@ -762,11 +869,13 @@ export const dashboardADMIN = async (req, res) => {
           }),
     */
 
-    const dataLINE = [{
-      id: "Ganancias",
-      color : "#0DCAF0",
-      data
-    }]
+    const dataLINE = [
+      {
+        id: "Ganancias",
+        color: "#0DCAF0",
+        data,
+      },
+    ];
 
     console.log(dataLINE);
 
@@ -776,61 +885,64 @@ export const dashboardADMIN = async (req, res) => {
       UsuariosTOTAL,
       GananciasUsuariosTOTAL,
       anno,
-      dataLINE
-
-    })
-
-  }catch (error) {
+      dataLINE,
+    });
+  } catch (error) {
     console.log(error);
     res.json({
-      error: "Hubo un error en el servidor. Vuelva a intentarlo más tarde"
+      error: "Hubo un error en el servidor. Vuelva a intentarlo más tarde",
     });
-  }}
+  }
+};
 
-export const historialVENTA = async(req,res) =>{
-  try{
-
-
+export const historialVENTA = async (req, res) => {
+  try {
     function getMonthDays(year, month) {
       return new Date(year, month, 0).getDate();
     }
 
     for (let mes = 1; mes <= 12; mes++) {
-      const fechaInicio = `${anno}-${mes.toString().padStart(2, '0')}-01`;
-      const numeroDias = getMonthDays(anno, mes)
-      const fechaFin = `${anno}-${mes.toString().padStart(2, '0')}-${numeroDias.toString().padStart(2, '0')}`;
+      const fechaInicio = `${anno}-${mes.toString().padStart(2, "0")}-01`;
+      const numeroDias = getMonthDays(anno, mes);
+      const fechaFin = `${anno}-${mes.toString().padStart(2, "0")}-${numeroDias
+        .toString()
+        .padStart(2, "0")}`;
 
-      const [gananciasProductosConsulta] = await db.query(`SELECT SUM(Total) as 'SumaCARRITO' FROM Carrito WHERE CarFecha BETWEEN '${fechaInicio}' AND '${fechaFin}'`);
+      const [gananciasProductosConsulta] = await db.query(
+        `SELECT SUM(Total) as 'SumaCARRITO' FROM Carrito WHERE CarFecha BETWEEN '${fechaInicio}' AND '${fechaFin}'`
+      );
 
       const gananciaProductos = gananciasProductosConsulta[0].SumaCARRITO || 0;
       gananciasUsuariosMES.push(gananciaProductos);
 
       console.log(fechaInicio);
       console.log(fechaFin);
-
     }
 
     console.log(gananciasUsuariosMES);
-  }catch(error){
+  } catch (error) {
     console.log(error);
     res.json({
-      error:"Chispas, Hubo Un Error En El Servidor. Vuelva A Intentarlo Más Tarde ÑAM"
-    })
+      error:
+        "Chispas, Hubo Un Error En El Servidor. Vuelva A Intentarlo Más Tarde ÑAM",
+    });
   }
-}
+};
 
-export const getTradeMark = async (req,res) => {
-  try{
+export const getTradeMark = async (req, res) => {
+  try {
     const [data] = await db.query("SELECT * FROM Marca ORDER BY MarNombre ASC");
-    res.json(data)
-  }catch(e){
+    res.json(data);
+  } catch (e) {
     console.log(e);
-    res.json({error:"Hubo un error en el servidor. Vuelva a intentarlo más tarde."})
+    res.json({
+      error: "Hubo un error en el servidor. Vuelva a intentarlo más tarde.",
+    });
   }
-}
+};
 
-export const tests = async (req, res) =>{
+export const tests = async (req, res) => {
   const advice = "Página para hacer pruebas unitarias";
   console.log(advice);
-  res.json({advice});
-}
+  res.json({ advice });
+};
