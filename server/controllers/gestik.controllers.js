@@ -429,6 +429,60 @@ export const dashboardDUENNO = async (req, res) => {
       [req.body.idAdmin]
     );
 
+    ///Obtener las ventas de los 5 productos más vendidos de un empleado por su id
+    const getTop5Emp = async (id) => {
+      const top5List = [];
+      const queryProVendidos = `SELECT SUM(ProVendidos)
+      FROM Productos_has_Carrito 
+      INNER JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito
+      WHERE Carrito.idEmpleadoC = ? AND Productos_has_Carrito.Productos_idProductos = ?;`;
+
+      for (const product of productList) {
+        const [[data]] = await db.query(queryProVendidos, [
+          id,
+          product.idProductos,
+        ]);
+        if (productList.indexOf(product) < 5) {
+          ///En caso de ser top 5
+          top5List.push({
+            x: product.PrNombre,
+            y: data["SUM(ProVendidos)"] ? data["SUM(ProVendidos)"] : 0,
+          });
+        } else {
+          ///En caso de no ser Top 5
+          var others = 0;
+          const othersList = productList.slice(5);
+
+          for (const oProduct of othersList) {
+            var [[dataO]] = await db.query(queryProVendidos, [
+              id,
+              oProduct.idProductos,
+            ]);
+            others += dataO[`SUM(ProVendidos)`]
+              ? parseInt(dataO[`SUM(ProVendidos)`])
+              : 0;
+          }
+
+          top5List.push({
+            x: "Otros",
+            y: others,
+          });
+          break;
+        }
+      }
+      return top5List;
+    };
+
+    ///Ordenar los datos para la gráfica.
+    const dataLINE = [];
+    for (const emp of listEmp) {
+      dataLINE.push({
+        id: emp.EmNombre,
+        color: getRandomColor(),
+        data: await getTop5Emp(emp.Empleado),
+      });
+    }
+
     //PRODUCTOS ACTUALES
     let productosVendidosACTUALES = 0;
 
@@ -532,143 +586,6 @@ export const dashboardDUENNO = async (req, res) => {
       })
     );
 
-    //PRODUCTOS VENDIDOS GRAFICAS
-
-    const [empleadosResults] = await db.query(
-      `SELECT EmNombre FROM Empleado Where Admin_idAdmin=${req.body.idAdmin}`
-    );
-
-    //Nombres De los Empleados
-    const empleadosEmNombres = empleadosResults.map((objeto) => {
-      return objeto.EmNombre;
-    });
-
-    //Numero De Empleados
-    const [[numeroDeEmpleadosCONSULTA]] = await db.query(
-      `SELECT COUNT(*) FROM Empleado WHERE Empleado.Admin_idAdmin = ${req.body.idAdmin}`
-    );
-
-    const numeroDeEmpleados = parseInt(numeroDeEmpleadosCONSULTA["COUNT(*)"]);
-
-    //Numero De Productos
-    const [[numeroDeProductosCONSULTA]] = await db.query(
-      `SELECT COUNT(*) FROM Productos WHERE Productos.Admin_idAdmin = ${req.body.idAdmin}`
-    );
-
-    const numeroDeProductos = parseInt(numeroDeProductosCONSULTA["COUNT(*)"]);
-
-    //Productos Vendidos En Total (Individuales)
-
-    //En esta funcion se obtienen todos los nombres de los Productos que el Administrador Tenga Registrado En Su Base De Datos
-
-    const [nombreProductosCONSULTA] = await db.query(
-      `SELECT PrNombre FROM Productos WHERE Admin_idAdmin = ${req.body.idAdmin};`
-    );
-
-    const nombreProductos = nombreProductosCONSULTA.map(
-      (objeto) => objeto.PrNombre
-    );
-
-    //Suma De Todos Los Productos
-
-    //ID DE EMPLEADOS
-
-    const [idEmpleadosCONSULTA] = await db.query(
-      `SELECT idEmpleado FROM Empleado WHERE Admin_idAdmin = ${req.body.idAdmin}`
-    );
-
-    const idEmpleados = idEmpleadosCONSULTA.map((objeto) => objeto.idEmpleado);
-
-    //ID DE PRODUCTOS
-
-    const [idProductosCONSULTA] = await db.query(
-      `SELECT idProductos FROM Productos WHERE Admin_idAdmin = ${req.body.idAdmin}`
-    );
-
-    const idProductos = idProductosCONSULTA.map((objeto) => objeto.idProductos);
-
-    const resultados = [];
-
-    for (let idEmpleadoC = 1; idEmpleadoC <= numeroDeEmpleados; idEmpleadoC++) {
-      for (
-        let idProductosC = 1;
-        idProductosC <= numeroDeProductos;
-        idProductosC++
-      ) {
-        const query = `SELECT Productos.PrNombre as 'x', SUM(ProVendidos) as 'y' FROM Productos_has_Carrito
-                        INNER JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito 
-                        INNER JOIN Productos ON Productos_has_Carrito.Productos_idProductos = Productos.idProductos 
-                        WHERE Carrito.idEmpleadoC = ${
-                          idEmpleados[idEmpleadoC - 1]
-                        } 
-                        AND Productos_has_Carrito.Productos_idProductos = ${
-                          idProductos[idProductosC - 1]
-                        }  
-                        AND Productos.Admin_idAdmin = ${req.body.idAdmin} 
-                        AND Carrito.CarFecha BETWEEN '${anno}-${mes}-01' AND '${anno}-${mes}-${daysInCurrentMonth}' GROUP BY Productos.PrNombre`;
-
-        const [resultado] = await db.query(query);
-
-        if (resultado.length > 0) {
-          if (resultado[0].y == null) {
-            resultado[0].x = nombreProductos[idProductosC - 1];
-            resultado[0].y = "0";
-          }
-
-          const integerY = parseInt(resultado[0].y);
-
-          resultado[0].y = integerY;
-
-          const objetoProducto = resultado.pop();
-
-          resultados.push(objetoProducto);
-        }
-      }
-    }
-
-    //numeroDeEmpleados
-
-    const ProductosEmpleado = [];
-
-    for (let i = 0; i < numeroDeEmpleados; i++) {
-      const inicio = i * numeroDeProductos;
-      const fin = inicio + numeroDeProductos;
-
-      const subarreglo = resultados.slice(inicio, fin);
-      ProductosEmpleado.push(subarreglo);
-    }
-
-    const ProductosEmpleadoORDENADO = [];
-
-    //console.log(ProductosEmpleado)
-
-    for (const arreglo of ProductosEmpleado) {
-      const arregloOrdenado = arreglo.slice().sort((a, b) => b.y - a.y);
-
-      let otrosSumaY = 0;
-      const arregloModificado = arregloOrdenado
-        .map((objeto, indice) => {
-          if (indice >= 9) {
-            otrosSumaY += objeto.y;
-            return null;
-          }
-          return objeto;
-        })
-        .filter(Boolean);
-
-      if (otrosSumaY > 0) {
-        arregloModificado.push({ x: "Otros", y: otrosSumaY });
-      } else if (otrosSumaY === 0) {
-        arregloModificado.push({ x: "Otros", y: 0 });
-      }
-
-      ProductosEmpleadoORDENADO.push(arregloModificado);
-    }
-
-    //console.log(ProductosEmpleadoORDENADO);
-
-    //,numeroDeEmpleados:0,empleadosEmNombres:{},ProductosEmpleadoORDENADO:[]
-
     // Función para obtener un color aleatorio del banco de datos
     function getRandomColor() {
       const letters = "0123456789ABCDEF";
@@ -678,44 +595,6 @@ export const dashboardDUENNO = async (req, res) => {
       }
       return color;
     }
-
-    /*Este es el paso final para así ya tener el DATA de las graficas del dashboard donde se utilizan las anteriores variables 
-    ya propuestas:empleadosEmNombres:{},ProductosEmpleadoORDENADO:[]
-    */
-
-    const dataLINE = await Promise.all(
-      listEmp.map(async ({ Empleado, EmNombre }, index) => {
-        var otros = 0;
-        if (index != -1) {
-          return {
-            id: EmNombre,
-            color: getRandomColor(),
-            data: await Promise.all(productList.map(
-              async ({ PrNombre, idProductos }, index, elements) => {
-                const [[data]] = await db.query(
-                  `SELECT SUM(ProVendidos)
-                      FROM Productos_has_Carrito 
-                      INNER JOIN Carrito ON Productos_has_Carrito.Carrito_idCarrito = Carrito.idCarrito
-                      WHERE Carrito.idEmpleadoC = ? AND Productos_has_Carrito.Productos_idProductos = ?;`,
-                  [Empleado, idProductos]
-                );
-                if (index < 5) {
-                  return {
-                    x: PrNombre,
-                    y: data['SUM(ProVendidos)'] ? data['SUM(ProVendidos)'] : 0
-                  };
-                } else {
-
-                }
-              }
-            ))
-          };
-        } else {
-          console.log("chispas");
-        }
-      })
-    );
-    
 
     //IMPIRMIR HISTORIAL DE CARRITO
 
